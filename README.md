@@ -1,6 +1,6 @@
 # Maratona Coach
 
-Backend Python para **AI Telegram Coach** — treinador de corrida de elite e nutricionista desportivo powered by Claude (Anthropic).
+Backend Python para **AI Telegram Coach** — treinador de corrida de elite e nutricionista desportivo.
 
 ## Stack
 
