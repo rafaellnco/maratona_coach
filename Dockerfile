@@ -4,21 +4,23 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
-COPY pyproject.toml README.md ./
-COPY app ./app
-
-RUN pip install --upgrade pip && pip install .
-
-RUN mkdir -p /data
-
-ENV DATABASE_URL=sqlite:////data/maratona_coach.db \
+    PIP_NO_CACHE_DIR=1 \
+    TELEGRAM_MODE=polling \
     APP_ENV=production \
-    PORT=8000 \
-    TELEGRAM_MODE=webhook
+    DATABASE_URL=sqlite:///./data/maratona_coach.db \
+    SHOWCASE_ENABLED=false \
+    PYTHONPATH=/app
+
+COPY requirements-jrm.txt requirements.txt
+COPY pyproject-jrm.toml pyproject.toml
+COPY app ./app
+COPY main.py start.sh ./
+
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install --no-deps -e . && \
+    mkdir -p /app/data /app/logs
 
 EXPOSE 8000
 
-# webhook = FastAPI (Fly.io) | polling = 24/7 sem URL pública (hosts free)
-CMD ["sh", "-c", "if [ \"$TELEGRAM_MODE\" = \"polling\" ]; then python -m app.telegram_polling; else uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}; fi"]
+CMD ["sh", "start.sh"]
