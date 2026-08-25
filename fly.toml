@@ -1,0 +1,35 @@
+# Fly.io — deploy 24/7 com URL HTTPS fixa
+# Ver DEPLOY.md para instruções completas
+
+app = "maratona-coach"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV = "production"
+  DATABASE_URL = "sqlite:////data/maratona_coach.db"
+  SCHEDULER_TIMEZONE = "Europe/Lisbon"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/health"
+
+# Volume: criar ANTES do deploy com:
+#   flyctl volumes create maratona_data --region ams --size 1 -a maratona-coach
+# Depois descomenta o bloco abaixo e corre `flyctl deploy` outra vez:
+#
+# [[mounts]]
+#   source = "maratona_data"
+#   destination = "/data"

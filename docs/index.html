@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maratona Coach — AI Coach de Corrida</title>
+  <meta name="description" content="Um coach de corrida e nutricionista desportivo powered by Claude, disponível 24/7 no Telegram.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0f1a;
+      --bg-card: #111827;
+      --bg-elevated: #1a2332;
+      --teal: #14b8a6;
+      --teal-dim: #0d9488;
+      --coral: #f97316;
+      --coral-soft: rgba(249, 115, 22, 0.15);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.12);
+      --gradient: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 50%, #f97316 100%);
+      --radius: 16px;
+      --radius-lg: 24px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(20, 184, 166, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 50%, rgba(249, 115, 22, 0.08), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Nav */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(10, 15, 26, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.75rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--teal); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    /* Hero */
+    .hero {
+      padding: 4rem 0 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 3rem 0;
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--teal);
+      margin-bottom: 1.25rem;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2.25rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 span {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero p { margin-left: auto; margin-right: auto; }
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 900px) {
+      .hero-stats { justify-content: center; }
+    }
+
+    .stat {
+      text-align: left;
+    }
+
+    .stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-image {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .hero-image::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+    }
+
+    /* Sections */
+    section {
+      padding: 5rem 0;
+    }
+
+    section:nth-child(even) {
+      background: rgba(17, 24, 39, 0.5);
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--coral);
+      margin-bottom: 0.75rem;
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-intro {
+      color: var(--text-muted);
+      max-width: 640px;
+      margin-bottom: 3rem;
+      font-size: 1.05rem;
+    }
+
+    /* Cards grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      transition: transform 0.25s, border-color 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(20, 184, 166, 0.3);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon.teal { background: rgba(20, 184, 166, 0.15); }
+    .card-icon.coral { background: var(--coral-soft); }
+    .card-icon.blue { background: rgba(14, 165, 233, 0.15); }
+
+    .card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Flow diagram */
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 2rem 0;
+    }
+
+    .flow-step {
+      flex: 1;
+      min-width: 140px;
+      max-width: 180px;
+      text-align: center;
+      padding: 1.5rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .flow-step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .flow-step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+
+    .flow-step:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--teal);
+      font-size: 1.25rem;
+      font-weight: 700;
+      z-index: 2;
+    }
+
+    .flow-num {
+      width: 32px;
+      height: 32px;
+      background: var(--gradient);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin: 0 auto 0.75rem;
+    }
+
+    .flow-step h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .flow-step p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Architecture */
+    .arch-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .arch-layout { grid-template-columns: 1fr; }
+    }
+
+    .arch-image img {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+
+    .tech-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .tech-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-elevated);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    .tech-list .tag {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      background: rgba(20, 184, 166, 0.2);
+      color: var(--teal);
+      border-radius: 4px;
+      min-width: 72px;
+      text-align: center;
+    }
+
+    /* Golden rules */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 640px) {
+      .rules-grid { grid-template-columns: 1fr; }
+    }
+
+    .rule-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border-left: 4px solid var(--coral);
+    }
+
+    .rule-card:nth-child(2) { border-left-color: var(--teal); }
+    .rule-card:nth-child(3) { border-left-color: #0ea5e9; }
+    .rule-card:nth-child(4) { border-left-color: #a855f7; }
+
+    .rule-card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .rule-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Phases timeline */
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .timeline { grid-template-columns: 1fr 1fr; }
+    }
+
+    .phase {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .phase-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .phase h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0.5rem 0 0.25rem;
+    }
+
+    .phase span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .plan-image {
+      margin-top: 2.5rem;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .plan-image img { width: 100%; display: block; }
+
+    /* Chat example */
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .chat-layout { grid-template-columns: 1fr; }
+    }
+
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .msg {
+      max-width: 90%;
+      padding: 0.9rem 1.1rem;
+      border-radius: 16px;
+      font-size: 0.9rem;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: var(--teal-dim);
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.bot {
+      align-self: flex-start;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg .sender {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .chat-image img {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+
+    /* Journey */
+    .journey {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .journey::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--teal), var(--coral));
+    }
+
+    .journey-item {
+      position: relative;
+      padding: 1.25rem 0 1.25rem 1.5rem;
+    }
+
+    .journey-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 1.5rem;
+      width: 16px;
+      height: 16px;
+      background: var(--bg);
+      border: 3px solid var(--teal);
+      border-radius: 50%;
+    }
+
+    .journey-item:last-child::before {
+      border-color: var(--coral);
+      background: var(--coral);
+    }
+
+    .journey-item h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .journey-item p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Tools */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      margin-top: 1.5rem;
+    }
+
+    .code-block .fn { color: #14b8a6; }
+    .code-block .str { color: #f97316; }
+    .code-block .cmt { color: #64748b; }
+
+    /* Footer */
+    footer {
+      padding: 3rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    footer p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    footer .logo {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+
+    .cta-note {
+      margin-top: 1.5rem;
+      padding: 1rem 1.5rem;
+      background: rgba(20, 184, 166, 0.08);
+      border: 1px solid rgba(20, 184, 166, 0.2);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .cta-note strong { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <div class="logo">Maratona Coach</div>
+      <ul class="nav-links">
+        <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#stack">Stack</a></li>
+        <li><a href="#regras">Regras</a></li>
+        <li><a href="#plano">Plano</a></li>
+        <li><a href="#jornada">Jornada</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="hero container">
+    <div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Projecto pessoal · Python + Claude AI
+      </div>
+      <h1>O teu coach de corrida<br><span>no Telegram, 24/7</span></h1>
+      <p>
+        Construí um backend completo que transforma mensagens de Telegram num treinador de elite
+        e nutricionista desportivo — com plano de meia maratona de 14 semanas, tracking automático
+        e notificações diárias.
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-value">14</div>
+          <div class="stat-label">Semanas de plano</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">21 km</div>
+          <div class="stat-label">Longão máximo</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Lembretes / dia</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="assets/hero-coach.jpg" alt="Ilustração de um coach de corrida com atleta e smartphone">
+    </div>
+  </header>
+
+  <section id="como-funciona">
+    <div class="container">
+      <div class="section-label">Fluxo</div>
+      <h2>Como funciona o bot</h2>
+      <p class="section-intro">
+        Envias uma mensagem no Telegram como se falasses com um treinador real.
+        O backend recebe, o Claude interpreta, grava dados na base de dados e responde com coaching personalizado.
+      </p>
+
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <h4>Telegram</h4>
+          <p>Envias "corri 10km" ou "qual é o plano da semana 5?"</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <h4>Polling 24/7</h4>
+          <p>O bot pede mensagens ao Telegram de minuto a minuto — sem webhook nem ngrok</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <h4>Claude AI</h4>
+          <p>Analisa contexto e chama tools para gravar ou consultar dados</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">4</div>
+          <h4>SQLite</h4>
+          <p>Plano, logs diários e conversas ficam persistidos</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">5</div>
+          <h4>Resposta</h4>
+          <p>Coach responde em PT-PT, motivador mas exigente</p>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top: 3rem;">
+        <div class="card">
+          <div class="card-icon teal">📝</div>
+          <h3>Tracking automático</h3>
+          <p>Dizes "bebi 3L de água" ou "dor nos joelhos 6/10" — o Claude extrai e grava no daily log sem formulários.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon coral">📅</div>
+          <h3>Plano real na BD</h3>
+          <p>O bot nunca inventa treinos. Consulta sempre a base de dados com 14 semanas, 4 fases e sessões Seg/Qua/Qui/Sáb.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon blue">⏰</div>
+          <h3>Notificações</h3>
+          <p>5 lembretes automáticos: briefing 09:00, suplementos 14:00 e 21:30, foco no treino 17:00, recovery 22:30 — hora de Lisboa.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="container">
+      <div class="section-label">Arquitectura</div>
+      <h2>O que está por trás</h2>
+      <p class="section-intro">
+        Stack Python leve — polling Telegram, Claude, SQLite e scheduler no mesmo processo, 24 horas no JustRunMy.App.
+      </p>
+
+      <div class="arch-layout">
+        <div class="arch-image">
+          <img src="assets/architecture-flow.jpg" alt="Diagrama Telegram, Claude AI e Base de Dados">
+        </div>
+        <ul class="tech-list">
+          <li><span class="tag">Bot</span> Telegram long polling — @maratona_coach_bot, canal único</li>
+          <li><span class="tag">IA</span> Anthropic Claude — tool use loop</li>
+          <li><span class="tag">BD</span> SQLModel + SQLite — plano, logs, conversas</li>
+          <li><span class="tag">Jobs</span> APScheduler — 5 cron jobs (09:00 → 22:30)</li>
+          <li><span class="tag">Web</span> Showcase estático HTTPS na mesma porta</li>
+          <li><span class="tag">Deploy</span> JustRunMy.App · <code>sh start.sh</code> · polling</li>
+        </ul>
+      </div>
+
+      <div class="code-block">
+        <span class="cmt"># Duas tools que o Claude usa automaticamente</span><br>
+        <span class="fn">update_daily_log</span>(water_liters, training_distance_km, knee_pain_level, smoked_near_training, ...)<br>
+        <span class="fn">get_training_plan</span>(scope=<span class="str">"full"</span> | <span class="str">"week"</span> | <span class="str">"phase"</span> | <span class="str">"upcoming"</span>)
+      </div>
+    </div>
+  </section>
+
+  <section id="regras">
+    <div class="container">
+      <div class="section-label">Coaching</div>
+      <h2>Regras de Ouro</h2>
+      <p class="section-intro">
+        O system prompt do Claude inclui regras específicas do atleta. O bot monitoriza activamente e alerta quando algo não bate certo.
+      </p>
+
+      <div class="rules-grid">
+        <div class="rule-card">
+          <h4>🚭 Regra do Tabaco</h4>
+          <p>Proibido fumar 2h antes e 2h depois de treino ou futebol. Protege tendões e sistema cardiovascular — se violares, o coach avisa firmemente.</p>
+        </div>
+        <div class="rule-card">
+          <h4>💊 Suplementos</h4>
+          <p>Lembretes às 14:00 e 21:30 (Ómega-3 + Creatina); Magnésio Solgar às 22:30. Responde sim/não — o coach regista no log.</p>
+        </div>
+        <div class="rule-card">
+          <h4>💧 Hidratação</h4>
+          <p>3,5 L em dias de treino ou futebol; 2,5 L em dias de descanso. Tracking automático quando reportas.</p>
+        </div>
+        <div class="rule-card">
+          <h4>🦵 Joelhos</h4>
+          <p>Se dor &gt; 4/10: descanso, gelo 15–20 min, Wall Sit 3×30–45s. Reduz impacto e evita volume extra.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="plano">
+    <div class="container">
+      <div class="section-label">Treino</div>
+      <h2>Plano de 14 semanas → Meia Maratona</h2>
+      <p class="section-intro">
+        Meta: 13 de Setembro de 2026. Plano pré-carregado na base de dados com 4 fases, longões progressivos de 8 km até 21 km, e ritmo-alvo de 5:40/km na fase de pico.
+      </p>
+
+      <div class="timeline">
+        <div class="phase">
+          <div class="phase-num">1</div>
+          <h4>Base</h4>
+          <span>Semanas 1–4</span>
+        </div>
+        <div class="phase">
+          <div class="phase-num">2</div>
+          <h4>Construção</h4>
+          <span>Semanas 5–8</span>
+        </div>
+        <div class="phase">
+          <div class="phase-num">3</div>
+          <h4>Pico</h4>
+          <span>Semanas 9–12</span>
+        </div>
+        <div class="phase">
+          <div class="phase-num">4</div>
+          <h4>Tapering</h4>
+          <span>Semanas 13–14</span>
+        </div>
+      </div>
+
+      <div class="plan-image">
+        <img src="assets/training-plan.jpg" alt="Ilustração do plano de treino em 4 fases">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-label">Demo</div>
+      <h2>Conversa real (exemplo)</h2>
+      <p class="section-intro">
+        Falas naturalmente — o bot entende contexto, grava dados e responde como um treinador de verdade.
+      </p>
+
+      <div class="chat-layout">
+        <div class="chat-messages">
+          <div class="msg user">
+            <div class="sender">Tu</div>
+            Joguei futebol ontem, corri uns 5.6 km no total. Hoje dor nos joelhos 3/10.
+          </div>
+          <div class="msg bot">
+            <div class="sender">Maratona Coach</div>
+            Registei o treino e a dor. 3/10 está controlável — mantém gelo se aumentar. Hoje é descanso ou treino leve conforme o plano. Bebeste os 3.5L?
+          </div>
+          <div class="msg user">
+            <div class="sender">Tu</div>
+            Qual é o plano completo?
+          </div>
+          <div class="msg bot">
+            <div class="sender">Maratona Coach</div>
+            Consultei o plano na BD — 14 semanas, 4 fases, longões até 21 km. Semana 1 começa com base aeróbica...
+          </div>
+        </div>
+        <div class="chat-image">
+          <img src="assets/telegram-chat.jpg" alt="Mockup de conversa no Telegram com o bot coach">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="jornada">
+    <div class="container">
+      <div class="section-label">História</div>
+      <h2>A jornada do projecto</h2>
+      <p class="section-intro">
+        De zero a bot em produção — iterámos canal de mensagens, deploy e modo 24/7 até chegar à solução actual.
+      </p>
+
+      <div class="journey">
+        <div class="journey-item">
+          <h4>Backend Python + Claude</h4>
+          <p>SQLModel, plano de 14 semanas na BD, Claude com tools para tracking e consulta do plano.</p>
+        </div>
+        <div class="journey-item">
+          <h4>WhatsApp via Twilio (descartado)</h4>
+          <p>Primeira ideia de canal — funcionou em protótipo, mas Twilio + túneis complicavam demasiado.</p>
+        </div>
+        <div class="journey-item">
+          <h4>Telegram como canal principal</h4>
+          <p>Bot grátis e personalizável. Em produção usa long polling; webhook/FastAPI ficou só para hosts com URL fixa.</p>
+        </div>
+        <div class="journey-item">
+          <h4>Deploy 24/7 no JustRunMy.App</h4>
+          <p>Free tier, <code>sh start.sh</code> + <code>main.py</code> — bot, scheduler e esta página HTTPS sempre online.</p>
+        </div>
+      </div>
+
+      <div class="cta-note">
+        <strong>Para testar:</strong> abre <a href="https://t.me/maratona_coach_bot" style="color: var(--teal);">@maratona_coach_bot</a>,
+        envia <code>/start</code> e experimenta <em>"corri 10km hoje"</em> ou <em>"qual é o plano da semana 3?"</em>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="logo">Maratona Coach</div>
+      <p>Projecto pessoal · Python · Claude · Telegram · JustRunMy</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem;">Meia Maratona · 13 Setembro 2026 🏃</p>
+    </div>
+  </footer>
+
+</body>
+</html>

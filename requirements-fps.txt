@@ -1,0 +1,6 @@
+# FPS.ms / Pterodactyl — so polling (128 MB RAM). Sem FastAPI/Uvicorn.
+anthropic>=0.42.0
+sqlmodel>=0.0.22
+pydantic-settings>=2.6.0
+apscheduler>=3.10.4
+httpx>=0.28.0
