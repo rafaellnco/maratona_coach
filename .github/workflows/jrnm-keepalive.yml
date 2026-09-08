@@ -1,0 +1,34 @@
+# Renova o ping do free tier JustRunMy (~36h). Nao uses intervalo de 2 dias.
+name: JustRunMy keepalive
+
+on:
+  schedule:
+    # A cada 12h (UTC) — margem segura vs limite ~36h
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: jrnm-keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Renew JustRunMy ping
+        env:
+          JUSTRUNMY_X_USER_IDENTITY: ${{ secrets.JUSTRUNMY_X_USER_IDENTITY }}
+          # Override opcional: Settings → Variables → JUSTRUNMY_APP_ID
+          JUSTRUNMY_APP_ID: ${{ vars.JUSTRUNMY_APP_ID }}
+        run: |
+          export JUSTRUNMY_APP_ID="${JUSTRUNMY_APP_ID:-60540}"
+          python scripts/jrnm_keepalive.py
